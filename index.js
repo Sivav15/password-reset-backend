@@ -164,7 +164,7 @@ app.post("/register", async (req, res) => {
         subject: "Hello ✔", // Subject line
         text: `Reset link`, // plain text body
         // html: "<b>Hello world?</b>", // html body
-        html: `<div style=" border:3px solid blue; padding : 20px;"><span>Password Reset Link : - </span>&nbsp <a href=${url}> Click
+        html: `<div style=" border:3px solid blue; padding : 20px;"><span>Password Reset Link : - </span> <a href=${url}> Click
         here !!!</a>
 
     <div>
