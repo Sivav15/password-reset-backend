@@ -149,7 +149,7 @@ app.post("/register", async (req, res) => {
 
 if(user){
     let token = jwt.sign({ id: user._id },process.env.SECRETKEY, { expiresIn: "1m" });
-    let url = `${process.env.BASE_URL}/password/${user._id}/${token}`
+    let url = `https://passwordresetz.netlify.app/password/${user._id}/${token}`
 
     let transporter = nodemailer.createTransport({
         service: 'gmail',
