@@ -132,81 +132,82 @@ app.post("/register", async (req, res) => {
   // Forget password send in mail
 
   app.post("/reset-sendmail", async (req, res) => {
+  try {
+    // Step 1 : Create a Connection between Nodejs and MongoDB
+    const connection = await mongoClient.connect(URL);
 
+    // Step 2 : Select the DB
+    const db = connection.db(DB);
 
+    // first to check the email in database
+    let user = await db.collection("users").findOne({ email: req.body.email });
 
-    try {
-  
+    if (user) {
+      let token = jwt.sign({ id: user._id }, process.env.SECRETKEY, {
+        expiresIn: "10m",
+      });
+      let url = `${process.env.BASE_URL}/password/${user._id}/${token}`;
 
-  // Step 1 : Create a Connection between Nodejs and MongoDB
-  const connection = await mongoClient.connect(URL);
-  
-  // Step 2 : Select the DB
-  const db = connection.db(DB);
-
-  // first to check the email in database
-  let user = await db.collection("users").findOne({ email: req.body.email })
-
-if(user){
-    let token = jwt.sign({ id: user._id },process.env.SECRETKEY, { expiresIn: "1m" });
-    let url = `https://passwordresetz.netlify.app/password/${user._id}/${token}`
-
-    let transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
+      let transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
         port: 993,
         secure: false, // true for 465, false for other ports
         auth: {
           user: process.env.EMAILUSE, // generated ethereal user
           pass: process.env.EMAILPASS, // generated ethereal password
         },
-      }); 
-    let details = {
-    from: "sivanathanv36@gmail.com", // sender address
-    to: user.email, // list of receivers
-    subject: "Hello ✔", // Subject line
-    text: `Reset link`, // plain text body
-    // html: "<b>Hello world?</b>", // html body
-    html: `<a href=${url}>Password Reset Link Click here !!!</a>`
-    }
-    
-      await transporter.sendMail(details,(err)=>{
-           if(err){
-            res.json({
-                statusCode: 200,
-                message:"it has some error for send a mail",
-              })
-           
-           }else{
-            res.json({
-                statusCode: 200,
-                message:"Password Reset link send in your mail",
-              })
-           }
       });
+      let details = {
+        from: "sivanathanv36@gmail.com", // sender address
+        to: user.email, // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: `Reset link`, // plain text body
+        // html: "<b>Hello world?</b>", // html body
+        html: `<div style=" border:3px solid blue; padding : 20px;"><span>Password Reset Link : - </span>&nbsp <a href=${url}> Click
+        here !!!</a>
 
- 
-}else{
-    res.json({
+    <div>
+        <h4>
+            Note :-
+            <ul>
+                <li>This link only valid in 10 minitues</li>
+            </ul>
+        </h4>
+    </div>
+</div>`,
+      };
+
+      await transporter.sendMail(details, (err) => {
+        if (err) {
+          res.json({
+            statusCode: 200,
+            message: "it has some error for send a mail",
+          });
+        } else {
+          res.json({
+            statusCode: 200,
+            message: "Password Reset link send in your mail",
+          });
+        }
+      });
+    } else {
+      res.json({
         statusCode: 401,
         message: " Please enter vaild email address",
-        
-      })
-}
-
-
-
-  // Step 5 : Close the connection
-  await connection.close();
-     
-    } catch (error) {
-      res.json({
-        statusCode: 500,
-        message: "Internal Server Error",
-        error
-      })
+      });
     }
-  });
+
+    // Step 5 : Close the connection
+    await connection.close();
+  } catch (error) {
+    res.json({
+      statusCode: 500,
+      message: "Internal Server Error",
+      error,
+    });
+  }
+});
 
 
 
